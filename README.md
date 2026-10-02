@@ -29,7 +29,7 @@ yourself.
 - **A payer script** (`npm run pay`) that proves the whole thing end to end:
   it signs a real payment and pays your own route for real USDC on testnet.
 
-Nothing here is a simulation. `npm start` talks to real Base Sepolia and
+Nothing here is a simulation. `npm run dev` talks to real Base Sepolia and
 Hedera testnet infrastructure from the first request.
 
 ## What's already deployed
@@ -78,11 +78,11 @@ Then fill in the blanks. `.env` is gitignored -- never commit it.
 
 | Variable | Required for | How to get it |
 |---|---|---|
-| `FACILITATOR_PRIVATE_KEY` | `npm start` | Generate a fresh EVM key (e.g. `cast wallet new`, or any wallet's "create account"). Fund it with Base Sepolia ETH from the [Alchemy faucet](https://www.alchemy.com/faucets/base-sepolia). This wallet pays gas on every settlement -- that's what makes paying gasless for your customers. |
+| `FACILITATOR_PRIVATE_KEY` | `npm run dev` | Generate a fresh EVM key (e.g. `cast wallet new`, or any wallet's "create account"). Fund it with Base Sepolia ETH from the [Alchemy faucet](https://www.alchemy.com/faucets/base-sepolia). This wallet pays gas on every settlement -- that's what makes paying gasless for your customers. |
 | `PAYER_PRIVATE_KEY` | `npm run pay` only | Generate another fresh EVM key. Fund it with Base Sepolia testnet USDC from [Circle's faucet](https://faucet.circle.com) (select Base Sepolia). Not needed to run the server itself. |
-| `HEDERA_ACCOUNT_ID` | `npm start` | Create a free testnet account at the [Hedera portal](https://portal.hedera.com) -- it auto-funds with testnet HBAR. |
-| `HEDERA_PRIVATE_KEY` | `npm start` | From the same portal signup. It's typically ECDSA, DER-encoded (starts `3030020100300706...`) -- this template loads it correctly with `PrivateKey.fromStringDer()`. (Loading a DER key as ED25519 silently derives the *wrong* key and every HCS submission fails with `INVALID_SIGNATURE` -- a known footgun, already handled here.) |
-| `FERRY402_SECRET` | `npm start` | An HMAC key, not a wallet -- it's what lets the server derive and check payment challenges with zero storage. Generate with `openssl rand -hex 32`. Must stay identical across every process serving this merchant. |
+| `HEDERA_ACCOUNT_ID` | `npm run dev` | Create a free testnet account at the [Hedera portal](https://portal.hedera.com) -- it auto-funds with testnet HBAR. |
+| `HEDERA_PRIVATE_KEY` | `npm run dev` | From the same portal signup. It's typically ECDSA, DER-encoded (starts `3030020100300706...`) -- this template loads it correctly with `PrivateKey.fromStringDer()`. (Loading a DER key as ED25519 silently derives the *wrong* key and every HCS submission fails with `INVALID_SIGNATURE` -- a known footgun, already handled here.) |
+| `FERRY402_SECRET` | `npm run dev` | An HMAC key, not a wallet -- it's what lets the server derive and check payment challenges with zero storage. Generate with `openssl rand -hex 32`. Must stay identical across every process serving this merchant. |
 
 Everything else in `.env.example` (`BASE_SEPOLIA_RPC_URL`,
 `ESCROW_ADDRESS_BASE_SEPOLIA`, `USDC_ADDRESS_BASE_SEPOLIA`,
@@ -95,7 +95,7 @@ escrow and topic.
 
 ```bash
 npm install
-npm start
+npm run dev
 ```
 
 This one command starts **both** the merchant API and the facilitator, in
@@ -150,7 +150,7 @@ scales to any number of anonymous requests.
 
 ## Make a real payment
 
-With `npm start` still running in one terminal:
+With `npm run dev` still running in one terminal:
 
 ```bash
 npm run pay

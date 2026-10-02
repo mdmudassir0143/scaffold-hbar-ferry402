@@ -25,7 +25,7 @@ that before changing anything below.
 - **One process, one command.** `src/server.ts` starts both the merchant
   Express app and the facilitator (`src/facilitator.ts`) in the same
   process. Keep it that way unless asked to split them -- it's what makes
-  `npm start` the one command a newcomer needs.
+  `npm run dev` the one command a newcomer needs.
 - **`ferry402()` only verifies.** It never calls `/settle`. Any logic that
   actually collects a payment and writes the HCS journal belongs in the
   route handler, after `next()` -- that's `src/settle.ts`'s job

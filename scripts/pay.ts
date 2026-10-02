@@ -1,6 +1,6 @@
 /**
  * A payer client -- proves the scaffold end to end by actually paying one of
- * its routes. Run `npm start` in one terminal, then `npm run pay` in
+ * its routes. Run `npm run dev` in one terminal, then `npm run pay` in
  * another.
  *
  * Uses `createPaymentHeader()` from @ferry402/sdk. This is the ONLY client
@@ -56,7 +56,7 @@ async function main(): Promise<void> {
   console.log(`\nSTEP 1: GET ${requestPath} with no payment`)
   const challengeRes = await fetch(`${BASE_URL}${requestPath}`)
   if (challengeRes.status !== 402) {
-    throw new Error(`expected HTTP 402, got ${challengeRes.status} -- is \`npm start\` running in another terminal?`)
+    throw new Error(`expected HTTP 402, got ${challengeRes.status} -- is \`npm run dev\` running in another terminal?`)
   }
   const challengeBody = (await challengeRes.json()) as { x402Version: number; accepts: PaymentRequirements[] }
   const requirement = challengeBody.accepts[0]

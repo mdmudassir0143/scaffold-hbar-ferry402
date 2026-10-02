@@ -5,7 +5,7 @@
  * calls to actually execute one into the Escrow contract on Base Sepolia.
  *
  * Self-hosted deliberately: nothing in ferry402 requires trusting someone
- * else's facilitator instance. `npm start` (src/server.ts) boots this in
+ * else's facilitator instance. `npm run dev` (src/server.ts) boots this in
  * the same process as the merchant API, which is simpler for a newcomer
  * than running two terminals -- there is nothing stopping you from running
  * it as its own standalone process later (just call `startFacilitator()`

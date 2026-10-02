@@ -1,10 +1,10 @@
 /**
  * The merchant API: one paid route, guarded by `ferry402()` from
- * @ferry402/sdk. `npm start` runs this file, which also boots the
+ * @ferry402/sdk. `npm run dev` runs this file, which also boots the
  * facilitator (src/facilitator.ts) in the same process -- one command
  * starts everything, which is simpler for a newcomer than two terminals.
  *
- * Run with: `npm install && npm start` (see README.md for prerequisites).
+ * Run with: `npm install && npm run dev` (see README.md for prerequisites).
  * Then: `curl -s http://localhost:3000/api/quote` (expect HTTP 402), or
  * `npm run pay` to pay it for real.
  */
