@@ -1,0 +1,79 @@
+{
+  "name": "scaffold-hbar-ferry402",
+  "description": "A paid HTTP API starter: charge per call in USDC on Base, settle into a non-custodial escrow, and journal every payment to Hedera Consensus Service. Built on @ferry402/sdk and @ferry402/facilitator.",
+  "version": "0.1.0",
+  "create-scaffold-hbar": {
+    "instructions": [
+      "Copy .env.example to .env and fill in FACILITATOR_PRIVATE_KEY, PAYER_PRIVATE_KEY, HEDERA_ACCOUNT_ID, HEDERA_PRIVATE_KEY, and FERRY402_SECRET -- see README.md \"Environment variables\" for how to get each.",
+      "Run `npm install`.",
+      "Run `npm start` -- this launches the merchant API and the facilitator together in one process.",
+      "In another terminal, run `curl -s http://localhost:3000/api/quote` and confirm you get an HTTP 402 with an `accepts` array -- that is the bill.",
+      "Run `npm run pay` to make a real payment end to end: it signs an EIP-3009 authorization, settles it into the Escrow contract on Base Sepolia, and journals the payment to Hedera Consensus Service.",
+      "Read README.md for the full walkthrough, live example transactions, and honest limitations before using this for anything beyond testnet."
+    ],
+    "requirements": {
+      "node": ">=20.18.3"
+    },
+    "capabilities": {
+      "packageManager": [
+        "npm"
+      ],
+      "frontend": [
+        "none"
+      ],
+      "solidityFramework": [
+        "none"
+      ]
+    },
+    "defaults": {
+      "packageManager": "npm",
+      "frontend": "none",
+      "solidityFramework": "none"
+    },
+    "outro": {
+      "sections": [
+        {
+          "title": "Set up",
+          "steps": [
+            {
+              "label": "Copy the env template",
+              "command": "cp .env.example .env"
+            },
+            {
+              "text": "Fill in FACILITATOR_PRIVATE_KEY, PAYER_PRIVATE_KEY, HEDERA_ACCOUNT_ID, HEDERA_PRIVATE_KEY and FERRY402_SECRET. README.md explains how to get each."
+            }
+          ]
+        },
+        {
+          "title": "Run it",
+          "steps": [
+            {
+              "label": "Start the merchant API and facilitator",
+              "command": "{run:start}"
+            },
+            {
+              "label": "See the 402 bill",
+              "command": "curl -s http://localhost:3000/api/quote"
+            },
+            {
+              "label": "Make a real testnet payment",
+              "command": "{run:pay}"
+            }
+          ]
+        },
+        {
+          "title": "Learn more",
+          "steps": [
+            {
+              "text": "README.md has the full walkthrough, live example transactions, and the honest limitations."
+            },
+            {
+              "url": "https://github.com/mdmudassir0143/ferry402"
+            }
+          ]
+        }
+      ],
+      "installCommand": "npm install"
+    }
+  }
+}

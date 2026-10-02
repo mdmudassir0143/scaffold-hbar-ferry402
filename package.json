@@ -1,0 +1,29 @@
+{
+  "name": "scaffold-hbar-ferry402",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Hedera Scaffold-HBAR template: a paid HTTP API built on ferry402 -- charge per call in USDC on Base, settle into a non-custodial escrow, and journal every payment to Hedera Consensus Service.",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=20.18.3"
+  },
+  "scripts": {
+    "start": "tsx src/server.ts",
+    "pay": "tsx scripts/pay.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@ferry402/sdk": "^0.2.1",
+    "@ferry402/facilitator": "^0.2.1",
+    "@hashgraph/sdk": "^2.81.0",
+    "express": "^5.2.1",
+    "viem": "^2.56.8"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^22.13.4",
+    "tsx": "^4.23.15",
+    "typescript": "^5.7.3"
+  }
+}
