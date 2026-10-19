@@ -28,9 +28,26 @@ yourself.
   against the real on-chain escrow balance.
 - **A payer script** (`npm run pay`) that proves the whole thing end to end:
   it signs a real payment and pays your own route for real USDC on testnet.
+- **A reconciliation dashboard** (`npm run next:dev`): the live bill, your
+  Escrow ledger balance, and your HCS journal with every entry checked
+  against the settlement transaction it names on Base Sepolia.
+- **The Escrow contract itself**, with its unit, invariant and golden-vector
+  test suites, and a script to deploy your own.
 
 Nothing here is a simulation. `npm run dev` talks to real Base Sepolia and
 Hedera testnet infrastructure from the first request.
+
+## Layout
+
+An npm workspaces monorepo:
+
+| Package | What it is |
+|---|---|
+| `packages/api` | The merchant API (`GET /api/quote`, guarded by `ferry402()`), the self-hosted facilitator it calls, and the payer script. Holds the only secrets, in `packages/api/.env`. |
+| `packages/nextjs` | A read-only dashboard. No wallet and no keys: it reads the API, the Hedera mirror node and Base Sepolia. |
+| `packages/foundry` | `Escrow.sol`, the non-custodial contract every payment settles into, with its test suites and a Base Sepolia deploy script. |
+
+Every command below runs from the repo root.
 
 ## What's already deployed
 
@@ -56,14 +73,16 @@ for the full, independently-verifiable transaction history (every tx hash,
 block, gas figure) behind these numbers -- nothing above is invented or
 rounded.
 
-When you're past the quickstart, deploy your own `Escrow` and create your
-own topic (both covered in that same doc's "Deploy your own" section) so
-your merchant has exclusive control over its own allowlist and journal.
+When you're past the quickstart, deploy your own `Escrow` (see "The
+contract" below) and create your own topic (covered in that same doc's
+"Deploy your own" section) so your merchant has exclusive control over its
+own allowlist and journal.
 
 ## Prerequisites
 
 - Node.js **>= 20.18.3**
-- npm (this is a plain npm project -- no pnpm, no workspaces)
+- npm >= 8 (the template uses npm workspaces)
+- [Foundry](https://getfoundry.sh) for the contract package (`foundryup`)
 - A little Base Sepolia testnet ETH (for the facilitator's gas) and testnet
   USDC (for the payer script) -- both free, see below
 - A free Hedera testnet account (also free, see below)
@@ -71,10 +90,11 @@ your merchant has exclusive control over its own allowlist and journal.
 ## Environment variables
 
 ```bash
-cp .env.example .env
+cp packages/api/.env.example packages/api/.env
 ```
 
-Then fill in the blanks. `.env` is gitignored -- never commit it.
+Then fill in the blanks. `.env` is gitignored -- never commit it. Only the
+API needs secrets; the dashboard and the contract tests run without any.
 
 | Variable | Required for | How to get it |
 |---|---|---|
@@ -84,30 +104,32 @@ Then fill in the blanks. `.env` is gitignored -- never commit it.
 | `HEDERA_PRIVATE_KEY` | `npm run dev` | From the same portal signup. It's typically ECDSA, DER-encoded (starts `3030020100300706...`) -- this template loads it correctly with `PrivateKey.fromStringDer()`. (Loading a DER key as ED25519 silently derives the *wrong* key and every HCS submission fails with `INVALID_SIGNATURE` -- a known footgun, already handled here.) |
 | `FERRY402_SECRET` | `npm run dev` | An HMAC key, not a wallet -- it's what lets the server derive and check payment challenges with zero storage. Generate with `openssl rand -hex 32`. Must stay identical across every process serving this merchant. |
 
-Everything else in `.env.example` (`BASE_SEPOLIA_RPC_URL`,
+Everything else in `packages/api/.env.example` (`BASE_SEPOLIA_RPC_URL`,
 `ESCROW_ADDRESS_BASE_SEPOLIA`, `USDC_ADDRESS_BASE_SEPOLIA`,
 `MERCHANT_EVM_ADDRESS`, `HCS_TOPIC_ID`, `PORT`, `FACILITATOR_PORT`) is
 already filled in with working defaults -- the deployed infrastructure
 above. They aren't secrets; override them only once you deploy your own
-escrow and topic.
+escrow and topic. If you do, set the same values in
+`packages/nextjs/.env.local` (see `packages/nextjs/.env.example`) so the
+dashboard reads your deployment too.
 
 ## Run it
 
 ```bash
-npm install
+npm install   # already done if you scaffolded with npm create scaffold-hbar
 npm run dev
 ```
 
 This one command starts **both** the merchant API and the facilitator, in
-one process, listening on `http://localhost:3000` and
+one process, listening on `http://localhost:3001` and
 `http://localhost:4000`. You should see:
 
 ```
 [facilitator] listening on http://127.0.0.1:4000
 
-scaffold-hbar-ferry402 -- paid API listening on http://localhost:3000
+scaffold-hbar-ferry402 -- paid API listening on http://localhost:3001
 
-  curl -s http://localhost:3000/api/quote
+  curl -s http://localhost:3001/api/quote
 
 Expect HTTP 402 with an `accepts` array -- that is the bill.
 Run `npm run pay` in another terminal to pay it for real.
@@ -116,7 +138,7 @@ Run `npm run pay` in another terminal to pay it for real.
 In another terminal, confirm the bill:
 
 ```bash
-curl -s http://localhost:3000/api/quote
+curl -s http://localhost:3001/api/quote
 ```
 
 You get back HTTP **402** with a body shaped like:
@@ -129,7 +151,7 @@ You get back HTTP **402** with a body shaped like:
       "scheme": "exact",
       "network": "base-sepolia",
       "maxAmountRequired": "10000",
-      "resource": "http://localhost:3000/api/quote",
+      "resource": "http://localhost:3001/api/quote",
       "payTo": "0x99Cd564B21fa7fD8553Cf31F32E448C17BBcC429",
       "asset": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
       "extra": {
@@ -156,7 +178,7 @@ With `npm run dev` still running in one terminal:
 npm run pay
 ```
 
-This script (`scripts/pay.ts`) plays the payer:
+This script (`packages/api/scripts/pay.ts`) plays the payer:
 
 1. GETs `/api/quote` with no payment, reads the 402's `accepts` array.
 2. Signs an EIP-3009 `ReceiveWithAuthorization` over the bill using
@@ -187,10 +209,60 @@ of what a settled run looks like against this exact deployment, see the
 and [the live topic](https://hashscan.io/testnet/topic/0.0.10719807) linked
 above.
 
+## Watch it on the dashboard
+
+```bash
+npm run next:dev
+```
+
+Open [http://localhost:3000](http://localhost:3000). The page renders
+three things, all read live on every load:
+
+- **The bill**: what an unpaid `GET /api/quote` returns. If the API isn't
+  running, the page says so instead.
+- **The Escrow ledger balance**: `Escrow.balanceOf(merchantEvm)` on Base
+  Sepolia, the USDC this merchant can withdraw.
+- **The HCS journal, reconciled**: the latest journal entries for this
+  merchant, read from the Hedera mirror node. Each one is checked against
+  the settlement transaction it names: the transaction must have succeeded
+  and emitted a `PaymentSettled` log from the trusted Escrow with the same
+  merchant, nonce and amount. Only then is it marked *verified on-chain*.
+
+That check is the reason the dashboard exists. The topic's `submit_key` is
+`null`, so anyone can append an entry shaped like one of yours; the journal
+is an ordered index, and the chain is the proof. `packages/nextjs/lib/chain.ts`
+is the code to copy when you build your own reconciliation.
+
+## The contract
+
+`packages/foundry/contracts/Escrow.sol` is the contract every payment
+settles into. It is the same source as the deployed Escrow above, kept
+byte-identical to [ferry402's own](https://github.com/mdmudassir0143/ferry402/blob/main/packages/contracts/src/Escrow.sol).
+
+```bash
+npm run foundry:test   # unit, EIP-1271, invariant and golden-vector suites
+```
+
+To deploy your own on Base Sepolia, fund a deployer key with Base Sepolia
+ETH and run:
+
+```bash
+DEPLOYER_PRIVATE_KEY=0x... npm run foundry:deploy:base-sepolia
+```
+
+Put the printed address in `packages/api/.env` as
+`ESCROW_ADDRESS_BASE_SEPOLIA` (and in `packages/nextjs/.env.local`). It
+settles in Circle's USDC by default; set `USDC_ADDRESS_BASE_SEPOLIA` to bind
+it to a different EIP-3009 token. The Escrow lives on Base, not Hedera,
+because it redeems EIP-3009 `receiveWithAuthorization` signatures, which
+USDC on Base supports; Hedera's part is the journal.
+
 ## How a payment moves through the system
 
+All three actors live in `packages/api`:
+
 ```
-payer                    merchant (src/server.ts)         facilitator (src/facilitator.ts)
+payer (scripts/pay.ts)   merchant (src/server.ts)         facilitator (src/facilitator.ts)
   |-- GET /api/quote -------->|                                    |
   |<-- 402 + accepts ---------|   (ferry402(), pure computation)   |
   |                           |                                    |
@@ -207,7 +279,7 @@ payer                    merchant (src/server.ts)         facilitator (src/facil
   |<-- 200 + resource --------|                                    |
 ```
 
-If `/settle` fails for any reason, `src/settle.ts` calls `release()` on
+If `/settle` fails for any reason, `packages/api/src/settle.ts` calls `release()` on
 `res.locals.x402` -- this frees the (payer, nonce) pair `ferry402()` already
 consumed before handing off, so a payer whose settlement failed isn't locked
 out of retrying for the rest of the derivation window over a payment that
@@ -226,7 +298,7 @@ never completed.
   `merchantEvm | resource | 5-minute time bucket`, with no random or
   per-purchase component -- an identical repeat request in the same window
   produces an identical nonce and is rejected as a replay
-  (`invalid_payment`). `scripts/pay.ts` works around this for repeat demo
+  (`invalid_payment`). `packages/api/scripts/pay.ts` works around this for repeat demo
   runs by appending a cache-busting query string; a route your clients call
   repeatedly with no parameters of its own needs the same trick (or a
   varying query/path per call).
@@ -241,15 +313,15 @@ never completed.
   shared store (Redis, a database) passed to `ferry402(config, {
   consumedNonceStore })`.
 - **Keep settlements sequential.** Don't fire concurrent `/settle` calls
-  against the same facilitator for the same payer; `scripts/pay.ts` makes
+  against the same facilitator for the same payer; `packages/api/scripts/pay.ts` makes
   one payment at a time by design.
 
 ## Learn more
 
 - [ferry402 (root repo)](https://github.com/mdmudassir0143/ferry402) -- the
   full system this template is built on.
-- [`@ferry402/sdk` README](https://github.com/mdmudassir0143/ferry402/tree/main/packages/sdk#readme) -- the merchant/payer-side API this template's `src/server.ts` and `scripts/pay.ts` use.
-- [`@ferry402/facilitator` README](https://github.com/mdmudassir0143/ferry402/tree/main/packages/facilitator#readme) -- the `/verify` + `/settle` service this template's `src/facilitator.ts` wraps.
+- [`@ferry402/sdk` README](https://github.com/mdmudassir0143/ferry402/tree/main/packages/sdk#readme) -- the merchant/payer-side API this template's `packages/api/src/server.ts` and `packages/api/scripts/pay.ts` use.
+- [`@ferry402/facilitator` README](https://github.com/mdmudassir0143/ferry402/tree/main/packages/facilitator#readme) -- the `/verify` + `/settle` service this template's `packages/api/src/facilitator.ts` wraps.
 - [Architecture](https://github.com/mdmudassir0143/ferry402/blob/main/docs/architecture.md) -- how a payment moves, and the trust model.
 - [Deployments](https://github.com/mdmudassir0143/ferry402/blob/main/docs/deployments.md) -- every verified transaction behind the addresses in this README.
 - [Troubleshooting](https://github.com/mdmudassir0143/ferry402/blob/main/docs/troubleshooting.md) -- real failure modes and fixes.

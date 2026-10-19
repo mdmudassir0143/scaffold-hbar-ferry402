@@ -1,0 +1,15 @@
+{
+  "name": "@sh/foundry",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "description": "The ferry402 Escrow contract (Base Sepolia), with its unit, invariant and golden-vector test suites.",
+  "scripts": {
+    "compile": "forge build",
+    "test": "forge test",
+    "format": "forge fmt",
+    "lint": "forge fmt --check",
+    "clean": "forge clean",
+    "deploy:base-sepolia": "forge script script/DeployEscrow.s.sol --rpc-url base_sepolia --broadcast"
+  }
+}

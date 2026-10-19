@@ -11,6 +11,7 @@ import { createPublicClient, http, parseEventLogs, type Address, type Hex } from
 import { baseSepolia } from 'viem/chains'
 import { Client, AccountId, PrivateKey } from '@hashgraph/sdk'
 import { journalEntryForSettlement, writeEntry, createHederaTopicSubmitter } from '@ferry402/facilitator'
+import type { JournalEntry } from '@ferry402/facilitator'
 import type { Ferry402Locals } from '@ferry402/sdk'
 import { env } from './env.js'
 
@@ -55,7 +56,7 @@ export type SettleOutcome =
       gasUsed: string
       settledAmount: string
       nonce: Hex
-      journal: { topicId: string; sequenceNumber: number; entry: Record<string, unknown> }
+      journal: { topicId: string; sequenceNumber: number; entry: JournalEntry }
     }
   | { ok: false; status: number; error: string }
 

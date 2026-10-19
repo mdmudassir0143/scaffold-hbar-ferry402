@@ -1,6 +1,6 @@
 {
   "name": "scaffold-hbar-ferry402",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "Hedera Scaffold-HBAR template: a paid HTTP API built on ferry402 -- charge per call in USDC on Base, settle into a non-custodial escrow, and journal every payment to Hedera Consensus Service.",
   "license": "MIT",
@@ -8,22 +8,31 @@
   "engines": {
     "node": ">=20.18.3"
   },
+  "workspaces": [
+    "packages/api",
+    "packages/nextjs",
+    "packages/foundry"
+  ],
   "scripts": {
-    "dev": "tsx src/server.ts",
-    "pay": "tsx scripts/pay.ts",
-    "typecheck": "tsc --noEmit"
+    "dev": "npm run dev -w @sh/api",
+    "pay": "npm run pay -w @sh/api",
+    "api:check-types": "npm run check-types -w @sh/api",
+    "next:dev": "npm run dev -w @sh/nextjs",
+    "next:build": "npm run build -w @sh/nextjs",
+    "next:serve": "npm run serve -w @sh/nextjs",
+    "next:lint": "npm run lint -w @sh/nextjs",
+    "next:check-types": "npm run check-types -w @sh/nextjs",
+    "foundry:compile": "npm run compile -w @sh/foundry",
+    "foundry:test": "npm run test -w @sh/foundry",
+    "foundry:lint": "npm run lint -w @sh/foundry",
+    "foundry:format": "npm run format -w @sh/foundry",
+    "foundry:deploy:base-sepolia": "npm run deploy:base-sepolia -w @sh/foundry",
+    "lint": "npm run next:lint && npm run next:check-types && npm run api:check-types && npm run foundry:lint",
+    "build": "npm run foundry:compile && npm run next:build",
+    "test": "npm run foundry:test"
   },
-  "dependencies": {
-    "@ferry402/sdk": "^0.2.1",
-    "@ferry402/facilitator": "^0.2.1",
-    "@hashgraph/sdk": "^2.81.0",
-    "express": "^5.2.1",
-    "viem": "^2.56.8"
-  },
-  "devDependencies": {
-    "@types/express": "^5.0.6",
-    "@types/node": "^22.13.4",
-    "tsx": "^4.23.15",
-    "typescript": "^5.7.3"
+  "overrides": {
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
   }
 }

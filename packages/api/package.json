@@ -1,0 +1,29 @@
+{
+  "name": "@sh/api",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "description": "The paid merchant API and its self-hosted facilitator, plus a payer script that pays it for real.",
+  "type": "module",
+  "engines": {
+    "node": ">=20.18.3"
+  },
+  "scripts": {
+    "dev": "tsx src/server.ts",
+    "pay": "tsx scripts/pay.ts",
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@ferry402/facilitator": "^0.2.1",
+    "@ferry402/sdk": "^0.2.1",
+    "@hashgraph/sdk": "^2.81.0",
+    "express": "^5.2.1",
+    "viem": "^2.56.8"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^22.13.4",
+    "tsx": "^4.23.15",
+    "typescript": "^5.7.3"
+  }
+}

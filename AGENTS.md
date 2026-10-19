@@ -14,18 +14,54 @@ topic. See `README.md` first -- it has the full walkthrough, the live
 deployed addresses this template targets, and the honest limitations. Read
 that before changing anything below.
 
+## Layout
+
+An npm workspaces monorepo. Run every script from the repo root.
+
+| Package | Contents | Check it with |
+|---|---|---|
+| `packages/api` (`@sh/api`) | Merchant API, facilitator, payer script. The only package with secrets (`packages/api/.env`). | `npm run api:check-types` |
+| `packages/nextjs` (`@sh/nextjs`) | Read-only dashboard: bill, Escrow balance, HCS journal reconciled against Base Sepolia. | `npm run next:lint`, `npm run next:build` |
+| `packages/foundry` (`@sh/foundry`) | `Escrow.sol`, its test suites, a Base Sepolia deploy script. | `npm run foundry:test`, `npm run foundry:lint` |
+
+`npm run lint` and `npm run build` run every package's checks; both must
+pass before you call a change done. Paths in the conventions below are
+relative to the package they're in.
+
 ## Conventions
 
-- **Plain npm, ESM, no build step.** `"type": "module"` throughout; run
-  TypeScript directly with `tsx`, never add a bundler or a `tsc` build
-  script that the `start`/`pay` scripts depend on. Don't introduce pnpm,
-  yarn, or a workspace -- `create-scaffold-hbar` only accepts
-  `npm | yarn | none` as a package manager, and this template declares
-  `npm`.
-- **One process, one command.** `src/server.ts` starts both the merchant
-  Express app and the facilitator (`src/facilitator.ts`) in the same
-  process. Keep it that way unless asked to split them -- it's what makes
-  `npm run dev` the one command a newcomer needs.
+- **npm, ESM.** `"type": "module"` throughout. The API runs TypeScript
+  directly with `tsx` -- don't add a bundler or a `tsc` build that `dev` or
+  `pay` depend on. Don't introduce pnpm or yarn: this template declares
+  `npm`, and `create-scaffold-hbar` rewrites commands for the declared
+  package manager only.
+- **Keep the root script names.** `dev`, `pay`, `next:*` and `foundry:*`
+  are referenced by `template.json`'s outro and the README. The CLI also
+  rewrites and prunes root scripts by name: it deletes `start` and other
+  `next:*` keys when a project is scaffolded with no frontend, which is why
+  the API's command is `dev`, not `start`.
+- **One process, one command.** `packages/api/src/server.ts` starts both the
+  merchant Express app and the facilitator (`src/facilitator.ts`) in the
+  same process. Keep it that way unless asked to split them -- it's what
+  makes `npm run dev` the one command a newcomer needs.
+- **The dashboard stays read-only.** `packages/nextjs` holds no keys and
+  signs nothing. It renders with no `.env` at all, and every upstream
+  failure (API down, RPC or mirror node unreachable) degrades to a message
+  on the page, never a non-200 route. Keep it that way.
+- **A journal entry is a claim, not proof.** The HCS topic has no submit
+  key, so `packages/nextjs/lib/chain.ts`'s `verifyEntry` checks every entry
+  against its settlement transaction: success status, a `PaymentSettled`
+  log from the trusted Escrow, same merchant, nonce and amount. Don't
+  weaken that check or show an unverified entry as paid.
+- **`Escrow.sol` is a copy, and must stay byte-identical to upstream.**
+  `packages/foundry/contracts/Escrow.sol` is ferry402's
+  `packages/contracts/src/Escrow.sol`. Its nonce derivation
+  (`keccak256(abi.encode(merchantEvm, paymentId))`) must match the one in
+  `@ferry402/sdk`'s `computeNonce` byte for byte, and
+  `test/NonceGoldenVectors.t.sol` pins both to the same literal vectors.
+  Never edit the contract or those vectors here; change them upstream in
+  ferry402, where the SDK side is tested against the same values, then copy
+  them across.
 - **`ferry402()` only verifies.** It never calls `/settle`. Any logic that
   actually collects a payment and writes the HCS journal belongs in the
   route handler, after `next()` -- that's `src/settle.ts`'s job
@@ -44,8 +80,8 @@ that before changing anything below.
   scripts (`npm run pay`) against the same resource at the same time.
 - **Never commit a secret.** `.env` is gitignored. Don't print a private key
   to logs, commit messages, or this file. If you add a new required
-  credential, document it in both `.env.example` (with a comment on how to
-  get it) and `README.md`'s environment variable table -- never hardcode a
+  credential, document it in both `packages/api/.env.example` (with a
+  comment on how to get it) and `README.md`'s environment variable table -- never hardcode a
   real key anywhere in source.
 - **Don't invent addresses, hashes, or block numbers.** Every address and
   transaction this template references is real and verified (see
@@ -70,7 +106,7 @@ import { createPaymentHeader } from '@ferry402/sdk'
 import { privateKeyToAccount } from 'viem/accounts'
 
 const account = privateKeyToAccount(process.env.PAYER_PRIVATE_KEY as `0x${string}`)
-const baseUrl = 'http://localhost:3000'
+const baseUrl = 'http://localhost:3001' // packages/api; the dashboard is on 3000
 
 async function payOnce(path: string): Promise<unknown> {
   // 1. Unpaid request -> 402 challenge. Append a cache-busting query string
@@ -108,7 +144,8 @@ Rules for an agent running this loop:
   time bucket will race over the same derived nonce.
 - **Never hardcode or print `PAYER_PRIVATE_KEY`.** Read it from the
   environment only; if you're asked to pay from a specific account, ask the
-  user to set it in `.env` rather than taking a key as a literal argument.
+  user to set it in `packages/api/.env` rather than taking a key as a
+  literal argument.
 - **A 402 with `error: "invalid_payment"` on retry of the exact same path
   usually just means the 5-minute window reused a nonce** -- not a bug to
   chase. Vary the path (query string) and retry.

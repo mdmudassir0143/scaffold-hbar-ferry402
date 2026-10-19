@@ -1,0 +1,20 @@
+[profile.default]
+src = "contracts"
+test = "test"
+script = "script"
+out = "out"
+libs = ["lib"]
+
+[fuzz]
+runs = 512
+
+[invariant]
+runs = 256
+# The handler try/catches every revert it deliberately provokes (mismatched
+# merchants, replayed nonces, over-withdrawals), so a top-level revert out of
+# the handler is never expected. Failing loudly on one turns a silent
+# ghost-accounting panic into an immediate test failure.
+fail_on_revert = true
+
+[rpc_endpoints]
+base_sepolia = "https://sepolia.base.org"

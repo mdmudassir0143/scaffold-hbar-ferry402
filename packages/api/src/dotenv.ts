@@ -7,13 +7,13 @@
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-/** Loads `<project root>/.env` if it exists. Never throws on a missing file
+/** Loads `packages/api/.env` if it exists. Never throws on a missing file
  *  -- only a required variable missing afterward should fail loudly, via
  *  `requiredEnv` below. Safe to call more than once (idempotent: later
  *  calls just re-read the same file). */
 export function loadDotEnv(): void {
   const here = path.dirname(fileURLToPath(import.meta.url))
-  const root = path.resolve(here, '..') // src/.. or scripts/.. -> project root
+  const root = path.resolve(here, '..') // src/.. or scripts/.. -> packages/api
   try {
     process.loadEnvFile(path.join(root, '.env'))
   } catch {

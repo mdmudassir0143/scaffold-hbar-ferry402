@@ -5,7 +5,7 @@
  * starts everything, which is simpler for a newcomer than two terminals.
  *
  * Run with: `npm install && npm run dev` (see README.md for prerequisites).
- * Then: `curl -s http://localhost:3000/api/quote` (expect HTTP 402), or
+ * Then: `curl -s http://localhost:3001/api/quote` (expect HTTP 402), or
  * `npm run pay` to pay it for real.
  */
 import express from 'express'

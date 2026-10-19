@@ -15,7 +15,7 @@ import { loadDotEnv, requiredEnv, optionalEnv } from './dotenv.js'
 loadDotEnv()
 
 export const env = {
-  port: Number(optionalEnv('PORT', '3000')),
+  port: Number(optionalEnv('PORT', '3001')),
   facilitatorPort: Number(optionalEnv('FACILITATOR_PORT', '4000')),
 
   rpcUrl: optionalEnv('BASE_SEPOLIA_RPC_URL', 'https://sepolia.base.org'),

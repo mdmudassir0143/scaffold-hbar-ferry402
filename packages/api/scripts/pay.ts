@@ -26,7 +26,7 @@ import { createPaymentHeader } from '@ferry402/sdk'
 import type { PaymentRequirements } from '@ferry402/sdk'
 import { privateKeyToAccount } from 'viem/accounts'
 
-const PORT = Number(optionalEnv('PORT', '3000'))
+const PORT = Number(optionalEnv('PORT', '3001'))
 const BASE_URL = `http://localhost:${PORT}`
 const RESOURCE_PATH = optionalEnv('PAY_RESOURCE', '/api/quote')
 
