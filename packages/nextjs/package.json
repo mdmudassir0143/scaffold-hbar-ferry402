@@ -10,7 +10,8 @@
     "build": "next build",
     "serve": "next start",
     "lint": "eslint .",
-    "check-types": "tsc --noEmit"
+    "check-types": "tsc --noEmit",
+    "format": "eslint . --fix"
   },
   "dependencies": {
     "next": "^15.5.4",
